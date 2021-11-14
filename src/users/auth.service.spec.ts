@@ -56,4 +56,46 @@ describe('AuthService', () => {
       expect(err.message).toBeDefined();
     }
   });
+
+  it('throws if signin is called with an unused email', async () => {
+    expect.assertions(1);
+
+    try {
+      await service.signin('asdf@mail.com', 'asdfg');
+    } catch (err) {
+      expect(err.message).toBeDefined();
+    }
+  });
+
+  it('throws an invalid password is provided', async () => {
+    expect.assertions(1);
+
+    fakeUsersService.find = () => {
+      return Promise.resolve([
+        { id: 1, email: 'asdf@mail.com', password: 'asdfg' } as User,
+      ]);
+    };
+
+    try {
+      await service.signin('asdf@mail.com', 'password');
+    } catch (err) {
+      expect(err.message).toBeDefined();
+    }
+  });
+
+  it('returns a user if correct password is provided', async () => {
+    fakeUsersService.find = () => {
+      return Promise.resolve([
+        {
+          id: 1,
+          email: 'asdf@mail.com',
+          password:
+            'fce5cc748f8cf04c.064bac19c1994036c4bb0098e34887cc0458e26298c99570899691a18c949d72',
+        } as User,
+      ]);
+    };
+
+    const user = await service.signin('asdf@mail.com', 'password');
+    expect(user).toBeDefined();
+  });
 });
