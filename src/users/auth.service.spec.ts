@@ -9,10 +9,22 @@ describe('AuthService', () => {
 
   beforeEach(async () => {
     // create a fake copy of the UsersService
+    const users: User[] = [];
     fakeUsersService = {
-      find: () => Promise.resolve([]),
-      create: (email: string, password: string) =>
-        Promise.resolve({ id: 1, email, password } as User),
+      find: (email: string) => {
+        const filteredUsers = users.filter((user) => user.email === email);
+        return Promise.resolve(filteredUsers);
+      },
+      create: (email: string, password: string) => {
+        const user = {
+          id: Math.floor(Math.random() * 999999),
+          email,
+          password,
+        } as User;
+        users.push(user);
+
+        return Promise.resolve(user);
+      },
     };
 
     const module = await Test.createTestingModule({
@@ -43,12 +55,7 @@ describe('AuthService', () => {
 
   it('throws an error if user signs up with email that is in use', async () => {
     expect.assertions(1);
-
-    fakeUsersService.find = () => {
-      return Promise.resolve([
-        { id: 1, email: 'asdf@mail.com', password: 'asdfg' } as User,
-      ]);
-    };
+    await service.signup('asdf@mail.com', 'asdfg');
 
     try {
       await service.signup('asdf@mail.com', 'asdfg');
@@ -69,12 +76,7 @@ describe('AuthService', () => {
 
   it('throws an invalid password is provided', async () => {
     expect.assertions(1);
-
-    fakeUsersService.find = () => {
-      return Promise.resolve([
-        { id: 1, email: 'asdf@mail.com', password: 'asdfg' } as User,
-      ]);
-    };
+    await service.signup('asdf@mail.com', 'password1');
 
     try {
       await service.signin('asdf@mail.com', 'password');
@@ -84,17 +86,7 @@ describe('AuthService', () => {
   });
 
   it('returns a user if correct password is provided', async () => {
-    fakeUsersService.find = () => {
-      return Promise.resolve([
-        {
-          id: 1,
-          email: 'asdf@mail.com',
-          password:
-            'fce5cc748f8cf04c.064bac19c1994036c4bb0098e34887cc0458e26298c99570899691a18c949d72',
-        } as User,
-      ]);
-    };
-
+    await service.signup('asdf@mail.com', 'password');
     const user = await service.signin('asdf@mail.com', 'password');
     expect(user).toBeDefined();
   });
