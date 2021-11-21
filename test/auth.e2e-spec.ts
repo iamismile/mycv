@@ -1,7 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from './../src/app.module';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const cookieSession = require('cookie-session');
 
 describe('Authentication System', () => {
   let app: INestApplication;
@@ -12,6 +14,16 @@ describe('Authentication System', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    app.use(
+      cookieSession({
+        keys: ['asdfasfd'],
+      }),
+    );
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+      }),
+    );
     await app.init();
   });
 
